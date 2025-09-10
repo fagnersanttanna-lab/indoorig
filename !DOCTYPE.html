@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Administração e TV</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827;
+            color: #E5E7EB;
+        }
+        .text-turquesa { color: #40E0D0; }
+        .bg-turquesa { background-color: #40E0D0; }
+        .text-roxo { color: #8A2BE2; }
+        .bg-roxo-claro { background-color: #9333ea; }
+        .tv-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        /* Custom scrollbar for media gallery */
+        #media-gallery::-webkit-scrollbar {
+            height: 8px;
+        }
+        #media-gallery::-webkit-scrollbar-track {
+            background-color: #4B5563;
+            border-radius: 10px;
+        }
+        #media-gallery::-webkit-scrollbar-thumb {
+            background-color: #6B7280;
+            border-radius: 10px;
+        }
+        #media-gallery {
+            scrollbar-width: thin;
+            scrollbar-color: #6B7280 #4B5563;
+        }
+        .loader {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #40E0D0;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 min-h-screen flex items-center justify-center p-4">
+
+    <!-- Tela de Login -->
+    <div id="login-screen" class="w-full max-w-sm mx-auto transition-opacity duration-500 ease-in-out opacity-100">
+        <div class="bg-gray-800 p-8 rounded-xl shadow-2xl border border-gray-700">
+            <h1 class="text-3xl font-bold text-center mb-2 text-turquesa">Indoor iG</h1>
+            <p class="text-gray-400 text-center mb-8">Faça login para acessar o painel de administração.</p>
+            <form id="login-form">
+                <div class="mb-4">
+                    <label for="username" class="block text-gray-400 text-sm font-medium mb-2">Usuário (E-mail)</label>
+                    <input type="text" id="username" class="w-full p-3 rounded-lg bg-gray-700 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-turquesa" placeholder="seu-email@empresa.com" required>
+                </div>
+                <div class="mb-6 relative">
+                    <label for="password" class="block text-gray-400 text-sm font-medium mb-2">Senha</label>
+                    <input type="password" id="password" class="w-full p-3 rounded-lg bg-gray-700 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-turquesa pr-10" placeholder="••••••••" required>
+                    <button type="button" id="toggle-password" class="absolute right-3 top-1/2 mt-2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors">
+                        <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.575 3.01 9.963 7.822.09.325.09.639 0 .964-.386 1.155-1.785 4.314-4.225 6.845a1.012 1.012 0 0 1-.788.136c-2.905-.443-5.264-1.954-7.394-4.264Z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                        </svg>
+                        <svg id="eye-slash-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 hidden">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.988 5.623a1.01 1.01 0 0 0-.756 1.154L1.42 12.895a1.01 1.01 0 0 0-.007.828l1.815 5.567a1.01 1.01 0 0 0 .756 1.154c1.154.211 2.37.323 3.612.323a11.39 11.39 0 0 0 6.64-2.181M1.99 12.5c.386 1.155 1.785 4.314 4.225 6.845a1.012 1.012 0 0 0 .788.136c2.905-.443 5.264-1.954 7.394-4.264M12 4.5c4.638 0 8.575 3.01 9.963 7.822.09.325.09.639 0 .964-.386 1.155-1.785 4.314-4.225 6.845M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                        </svg>
+                    </button>
+                </div>
+                <button type="submit" class="w-full bg-turquesa text-gray-900 font-bold py-3 rounded-lg hover:bg-opacity-90 transition-colors">
+                    Acessar
+                </button>
+                <p id="error-message" class="text-center text-red-500 text-sm mt-4 hidden"></p>
+                <button type="button" id="signup-btn" class="w-full mt-4 text-center text-turquesa hover:text-turquesa/80 transition-colors">
+                    Cadastre-se
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Painel de Administração -->
+    <div id="admin-panel" class="hidden w-full max-w-4xl mx-auto p-6 bg-gray-800 rounded-xl shadow-2xl transition-opacity duration-500 ease-in-out opacity-0">
+        <div class="flex items-center justify-between mb-8">
+            <h1 id="admin-panel-title" class="text-3xl font-bold text-white">Painel de Administração</h1>
+            <div class="flex items-center space-x-4">
+                 <p id="company-name-display" class="text-white font-semibold"></p>
+                <button id="logout-btn" class="text-gray-400 hover:text-white transition-colors">
+                    Sair
+                </button>
+            </div>
+        </div>
+        
+        <!-- Seção de Gerenciamento de Empresas (Visível apenas para o admin) -->
+        <div id="company-management-section" class="mb-8 p-6 bg-gray-700 rounded-lg border border-gray-600 hidden">
+            <h2 class="text-xl font-bold text-white mb-4">Gerenciamento de Empresas</h2>
+            <div class="flex flex-col md:flex-row items-end gap-4">
+                <button id="add-company-btn" class="flex-grow px-6 py-3 bg-turquesa text-gray-900 font-bold rounded-lg hover:bg-opacity-90 transition-colors">
+                    Adicionar Empresa
+                </button>
+                <button id="clear-companies-btn" class="flex-grow px-6 py-3 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-colors">
+                    Limpar Empresas
+                </button>
+            </div>
+            <div id="company-list-container" class="mt-4">
+                <p id="no-companies-message" class="text-center text-gray-400 hidden">Nenhuma empresa cadastrada.</p>
+                <div id="company-list" class="flex flex-wrap gap-2 mt-2"></div>
+            </div>
+        </div>
+
+        <!-- Seção de Upload de Mídia -->
+        <div class="mb-8 p-6 bg-gray-700 rounded-lg border border-gray-600">
+            <h2 class="text-xl font-bold text-white mb-4">Upload de Mídia</h2>
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <!-- Seletor de empresa visível apenas para o admin -->
+                <div id="company-select-container" class="w-full md:w-auto flex-grow hidden">
+                    <label for="company-select" class="block text-gray-400 text-sm font-medium mb-2">Selecione a Empresa</label>
+                    <select id="company-select" class="w-full p-3 rounded-lg bg-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-turquesa">
+                        <option value="">Selecione...</option>
+                    </select>
+                </div>
+                <input type="file" id="media-upload" accept="image/*,video/*" multiple class="hidden">
+                <label for="media-upload" id="media-upload-label" class="flex-grow w-full md:w-auto p-4 border-2 border-dashed border-gray-500 rounded-lg cursor-pointer hover:bg-gray-600 transition-colors">
+                    <div id="upload-content" class="flex items-center justify-center">
+                        <p id="media-upload-text" class="text-center text-gray-400">Clique para selecionar ou arraste e solte arquivos de mídia (imagens e vídeos)</p>
+                        <div id="upload-loader" class="loader ml-4 hidden"></div>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <!-- Galeria de Mídias -->
+        <div class="mb-8 p-6 bg-gray-700 rounded-lg border border-gray-600">
+            <div class="flex items-center justify-between mb-4">
+                 <h2 class="text-xl font-bold text-white">Mídias Uploaded</h2>
+                 <button id="show-all-media-btn" class="text-sm px-3 py-1 bg-turquesa text-gray-900 font-bold rounded-full hidden">
+                    Mostrar Todas as Mídias
+                 </button>
+            </div>
+            <div class="relative">
+                <div id="media-gallery" class="flex flex-nowrap gap-4 pb-4 overflow-x-hidden scroll-smooth">
+                    <!-- Mídias serão injetadas aqui via JavaScript -->
+                </div>
+                <!-- Seta de navegação esquerda -->
+                <button id="left-arrow-btn" class="absolute left-0 top-1/2 -translate-y-1/2 p-2 bg-gray-800/50 rounded-full text-white hover:bg-gray-800 transition-colors z-10 hidden">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+                <!-- Seta de navegação direita -->
+                <button id="right-arrow-btn" class="absolute right-0 top-1/2 -translate-y-1/2 p-2 bg-gray-800/50 rounded-full text-white hover:bg-gray-800 transition-colors z-10 hidden">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                </button>
+            </div>
+            <p id="no-media-message" class="text-center text-gray-400 mt-4 hidden">Nenhuma mídia encontrada. Faça o upload de alguns arquivos.</p>
+        </div>
+
+        <!-- Prévia da TV -->
+        <div class="p-6 bg-gray-700 rounded-lg border border-gray-600">
+            <h2 class="text-xl font-bold text-white mb-4">Prévia da TV</h2>
+            <div class="relative w-full aspect-[9/16] bg-black rounded-lg overflow-hidden shadow-inner flex items-center justify-center">
+                <p id="tv-status" class="text-xl text-gray-500">Nenhuma mídia para exibir. Faça o upload.</p>
+                <img id="tv-image" src="" alt="Prévia da TV" class="hidden w-full h-full object-contain">
+                <video id="tv-video" src="" class="hidden w-full h-full object-contain"></video>
+            </div>
+            <div class="flex flex-wrap justify-center mt-4 gap-4">
+                <button id="play-btn" class="flex-grow px-6 py-3 bg-turquesa text-gray-900 font-bold rounded-lg hover:bg-opacity-90 transition-colors">
+                    Reproduzir
+                </button>
+                <button id="stop-btn" class="flex-grow px-6 py-3 bg-gray-600 text-white font-bold rounded-lg hover:bg-gray-500 transition-colors">
+                    Parar
+                </button>
+                <button id="open-tv-btn" class="flex-grow px-6 py-3 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-700 transition-colors">
+                    Abrir Tela da TV
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tela da TV -->
+    <div id="tv-screen" class="tv-screen hidden">
+        <p id="tv-screen-status" class="text-3xl text-gray-500">Aguardando conteúdo...</p>
+        <img id="tv-screen-image" src="" alt="Tela da TV" class="hidden w-full h-full object-contain">
+        <video id="tv-screen-video" src="" class="hidden w-full h-full object-contain"></video>
+    </div>
+
+    <!-- Modal de Mensagem -->
+    <div id="message-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-xl border border-gray-700 w-80 text-center">
+            <p id="modal-text" class="text-white mb-4"></p>
+            <button id="modal-close-btn" class="px-4 py-2 bg-turquesa text-gray-900 font-bold rounded-lg hover:bg-opacity-90">OK</button>
+        </div>
+    </div>
+    
+    <!-- Modal para Adicionar Empresa/Usuário -->
+    <div id="add-company-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-gray-800 p-8 rounded-xl shadow-2xl border border-gray-700 w-full max-w-sm">
+            <h2 class="text-xl font-bold text-center mb-2 text-turquesa">Indoor iG</h2>
+            <p class="text-gray-400 text-center mb-8">Cadastre sua empresa e usuário.</p>
+            <form id="add-company-form">
+                <div class="mb-4">
+                    <label for="new-company-name" class="block text-gray-400 text-sm font-medium mb-2">Nome da Empresa</label>
+                    <input type="text" id="new-company-name" class="w-full p-3 rounded-lg bg-gray-700 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-turquesa" placeholder="Ex: Empresa X" required>
+                </div>
+                <div class="mb-4">
+                    <label for="new-user-email" class="block text-gray-400 text-sm font-medium mb-2">E-mail do Usuário</label>
+                    <input type="email" id="new-user-email" class="w-full p-3 rounded-lg bg-gray-700 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-turquesa" placeholder="seu-email@empresa.com" required>
+                </div>
+                <div class="mb-6 relative">
+                    <label for="generated-password" class="block text-gray-400 text-sm font-medium mb-2">Senha</label>
+                    <input type="password" id="generated-password" class="w-full p-3 rounded-lg bg-gray-700 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-turquesa pr-10" placeholder="••••••••" required>
+                    <button type="button" id="toggle-password-modal" class="absolute right-3 top-1/2 mt-2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors">
+                        <svg id="eye-icon-modal" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.575 3.01 9.963 7.822.09.325.09.639 0 .964-.386 1.155-1.785 4.314-4.225 6.845a1.012 1.012 0 0 1-.788.136c-2.905-.443-5.264-1.954-7.394-4.264Z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                        </svg>
+                        <svg id="eye-slash-icon-modal" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 hidden">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.988 5.623a1.01 1.01 0 0 0-.756 1.154L1.42 12.895a1.01 1.01 0 0 0-.007.828l1.815 5.567a1.01 1.01 0 0 0 .756 1.154c1.154.211 2.37.323 3.612.323a11.39 11.39 0 0 0 6.64-2.181M1.99 12.5c.386 1.155 1.785 4.314 4.225 6.845a1.012 1.012 0 0 0 .788.136c2.905-.443 5.264-1.954 7.394-4.264M12 4.5c4.638 0 8.575 3.01 9.963 7.822.09.325.09.639 0 .964-.386 1.155-1.785 4.314-4.225 6.845M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="flex gap-4">
+                    <button type="submit" id="add-company-modal-btn" class="flex-grow bg-turquesa text-gray-900 font-bold py-3 rounded-lg hover:bg-opacity-90 transition-colors">
+                        Cadastrar
+                    </button>
+                    <button type="button" id="cancel-add-company-btn" class="flex-grow bg-gray-600 text-white font-bold py-3 rounded-lg hover:bg-gray-500 transition-colors">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Novo: Modal de Confirmação -->
+    <div id="confirm-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-xl border border-gray-700 w-80 text-center">
+            <p id="confirm-modal-text" class="text-white mb-4"></p>
+            <div class="flex justify-center gap-4">
+                <button id="confirm-modal-yes" class="px-4 py-2 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700">Confirmar</button>
+                <button id="confirm-modal-no" class="px-4 py-2 bg-gray-600 text-white font-bold rounded-lg hover:bg-gray-500">Cancelar</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Variáveis de ambiente
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        // Mapeamento de elementos do DOM
+        const loginScreen = document.getElementById('login-screen');
+        const loginForm = document.getElementById('login-form');
+        const adminPanel = document.getElementById('admin-panel');
+        const addCompanyBtn = document.getElementById('add-company-btn');
+        const clearCompaniesBtn = document.getElementById('clear-companies-btn');
+        const companyListContainer = document.getElementById('company-list-container');
+        const companyList = document.getElementById('company-list');
+        const noCompaniesMessage = document.getElementById('no-companies-message');
+        const companySelect = document.getElementById('company-select');
+        const companySelectContainer = document.getElementById('company-select-container');
+        const mediaUpload = document.getElementById('media-upload');
+        const mediaUploadLabel = document.getElementById('media-upload-label');
+        const mediaUploadText = document.getElementById('media-upload-text');
+        const uploadLoader = document.getElementById('upload-loader');
+        const uploadContent = document.getElementById('upload-content');
+        const mediaGallery = document.getElementById('media-gallery');
+        const tvStatus = document.getElementById('tv-status');
+        const tvImage = document.getElementById('tv-image');
+        const tvVideo = document.getElementById('tv-video');
+        const playBtn = document.getElementById('play-btn');
+        const stopBtn = document.getElementById('stop-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const noMediaMessage = document.getElementById('no-media-message');
+        const errorMessage = document.getElementById('error-message');
+        const openTvBtn = document.getElementById('open-tv-btn');
+        const tvScreen = document.getElementById('tv-screen');
+        const tvScreenStatus = document.getElementById('tv-screen-status');
+        const tvScreenImage = document.getElementById('tv-screen-image');
+        const tvScreenVideo = document.getElementById('tv-screen-video');
+        const messageModal = document.getElementById('message-modal');
+        const modalText = document.getElementById('modal-text');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+        const showAllMediaBtn = document.getElementById('show-all-media-btn');
+        const companyNameDisplay = document.getElementById('company-name-display');
+        const leftArrowBtn = document.getElementById('left-arrow-btn');
+        const rightArrowBtn = document.getElementById('right-arrow-btn');
+        const addCompanyModal = document.getElementById('add-company-modal');
+        const addCompanyForm = document.getElementById('add-company-form');
+        const newCompanyNameInput = document.getElementById('new-company-name');
+        const newUserEmailInput = document.getElementById('new-user-email');
+        const generatedPasswordInput = document.getElementById('generated-password');
+        const cancelAddCompanyBtn = document.getElementById('cancel-add-company-btn');
+        const signupBtn = document.getElementById('signup-btn');
+        const companyManagementSection = document.getElementById('company-management-section');
+        const adminPanelTitle = document.getElementById('admin-panel-title');
+        const passwordInput = document.getElementById('password');
+        const togglePasswordBtn = document.getElementById('toggle-password');
+        const eyeIcon = document.getElementById('eye-icon');
+        const eyeSlashIcon = document.getElementById('eye-slash-icon');
+        const togglePasswordModalBtn = document.getElementById('toggle-password-modal');
+        const eyeIconModal = document.getElementById('eye-icon-modal');
+        const eyeSlashIconModal = document.getElementById('eye-slash-icon-modal');
+
+        // Novo: Modal de Confirmação
+        const confirmModal = document.getElementById('confirm-modal');
+        const confirmModalText = document.getElementById('confirm-modal-text');
+        const confirmModalYes = document.getElementById('confirm-modal-yes');
+        const confirmModalNo = document.getElementById('confirm-modal-no');
+
+        let companiesData = { companies: [] };
+        let filteredMediaList = [];
+        let currentMediaIndex = 0;
+        let isPlaying = false;
+        let playTimeout;
+        let tvWindow = null;
+        let currentCompanyId = null;
+        let currentUserId = null;
+
+        // Função para mostrar o modal de mensagem
+        function showModal(message) {
+            modalText.textContent = message;
+            messageModal.classList.remove('hidden');
+        }
+
+        modalCloseBtn.addEventListener('click', () => {
+            messageModal.classList.add('hidden');
+        });
+
+        // Função para mostrar o modal de confirmação
+        function showConfirmModal(message, onConfirm) {
+            confirmModalText.textContent = message;
+            confirmModal.classList.remove('hidden');
+
+            confirmModalYes.onclick = () => {
+                onConfirm();
+                confirmModal.classList.add('hidden');
+            };
+
+            confirmModalNo.onclick = () => {
+                confirmModal.classList.add('hidden');
+            };
+        }
+
+        // Função para mostrar o modal de cadastro
+        function showAddCompanyModal() {
+            addCompanyModal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        // Função para esconder o modal de cadastro
+        function hideAddCompanyModal() {
+            addCompanyModal.classList.add('hidden');
+            addCompanyForm.reset();
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        // Função para salvar a sessão no localStorage
+        function saveSession(userId, companyId) {
+            localStorage.setItem('userSession', JSON.stringify({ userId, companyId }));
+        }
+
+        // Função para carregar a sessão do localStorage
+        function loadSession() {
+            const session = localStorage.getItem('userSession');
+            if (session) {
+                return JSON.parse(session);
+            }
+            return null;
+        }
+
+        // Simulação de login e funcionalidades do painel
+        function initAdminPanel() {
+            loadData();
+            
+            // Lógica para mostrar/esconder senha no login
+            togglePasswordBtn.addEventListener('click', () => {
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    eyeIcon.classList.add('hidden');
+                    eyeSlashIcon.classList.remove('hidden');
+                } else {
+                    passwordInput.type = 'password';
+                    eyeIcon.classList.remove('hidden');
+                    eyeSlashIcon.classList.add('hidden');
+                }
+            });
+            
+            // Lógica para mostrar/esconder senha no modal de cadastro
+            togglePasswordModalBtn.addEventListener('click', () => {
+                if (generatedPasswordInput.type === 'password') {
+                    generatedPasswordInput.type = 'text';
+                    eyeIconModal.classList.add('hidden');
+                    eyeSlashIconModal.classList.remove('hidden');
+                } else {
+                    generatedPasswordInput.type = 'password';
+                    eyeIconModal.classList.remove('hidden');
+                    eyeSlashIconModal.classList.add('hidden');
+                }
+            });
+
+            // Lógica de login
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                errorMessage.classList.add('hidden');
+
+                if (username === 'fagner.santtanna@gmail.com' && password === 'sad123') {
+                    currentUserId = 'fagner.santtanna@gmail.com';
+                    currentCompanyId = null;
+                    saveSession(currentUserId, currentCompanyId);
+                    showAdminPanel();
+                } else {
+                    const foundCompany = companiesData.companies.find(c => c.email === username && c.password === password);
+                    if (foundCompany) {
+                        if (foundCompany.approved) {
+                            currentUserId = foundCompany.email;
+                            currentCompanyId = foundCompany.id;
+                            saveSession(currentUserId, currentCompanyId);
+                            showAdminPanel();
+                        } else {
+                            errorMessage.textContent = 'Sua empresa ainda não foi aprovada. Por favor, aguarde a aprovação do administrador.';
+                            errorMessage.classList.remove('hidden');
+                        }
+                    } else {
+                        errorMessage.textContent = 'Usuário ou senha incorretos.';
+                        errorMessage.classList.remove('hidden');
+                    }
+                }
+            });
+
+            logoutBtn.addEventListener('click', () => {
+                stopMedia();
+                currentUserId = null;
+                currentCompanyId = null;
+                localStorage.removeItem('userSession');
+                adminPanel.classList.add('opacity-0');
+                setTimeout(() => {
+                    adminPanel.classList.add('hidden');
+                    loginScreen.classList.remove('hidden');
+                    setTimeout(() => loginScreen.classList.remove('opacity-0'), 50);
+                }, 500);
+                companyNameDisplay.textContent = '';
+                signupBtn.classList.remove('hidden');
+            });
+            
+            // Botão "Cadastre-se" no login
+            signupBtn.addEventListener('click', () => {
+                hideAddCompanyModal();
+                showAddCompanyModal();
+            });
+
+            // Botão para adicionar empresa no painel de admin
+            addCompanyBtn.addEventListener('click', () => showAddCompanyModal());
+            
+            // Adiciona nova empresa
+            addCompanyForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const name = newCompanyNameInput.value.trim();
+                const email = newUserEmailInput.value.trim();
+                const password = generatedPasswordInput.value;
+
+                if (name && email && password) {
+                    const id = `company-${Date.now()}`;
+                    companiesData.companies.push({ id, name, email, password, media: [], approved: false });
+                    saveData();
+                    hideAddCompanyModal();
+                    showModal(`Empresa "${name}" cadastrada com sucesso! Ela está pendente de aprovação. `);
+                } else {
+                    showModal('Por favor, preencha todos os campos.');
+                }
+            });
+
+            // Cancelar adição de empresa
+            cancelAddCompanyBtn.addEventListener('click', hideAddCompanyModal);
+
+            // Abrir nova janela para a TV
+            openTvBtn.addEventListener('click', () => {
+                if (filteredMediaList.length > 0 && !isPlaying) {
+                    startMedia();
+                    tvWindow = window.open(`${window.location.origin}${window.location.pathname}?mode=tv`, 'tvDisplay');
+                    if (tvWindow) {
+                        tvWindow.addEventListener('load', () => {
+                             tvWindow.postMessage({
+                                type: 'play',
+                                mediaList: filteredMediaList,
+                                index: 0
+                            }, window.location.origin);
+                        });
+                    }
+                    showModal('A tela da TV foi aberta em uma nova janela e a reprodução foi iniciada automaticamente. Você pode controlá-la a partir deste painel.');
+                } else if (isPlaying) {
+                    showModal('A prévia já está em reprodução.');
+                } else {
+                    showModal('Não há mídias para reproduzir. Faça o upload.');
+                }
+            });
+
+            clearCompaniesBtn.addEventListener('click', () => {
+                showConfirmModal('Tem certeza de que deseja remover todas as empresas? Esta ação é irreversível.', () => {
+                    companiesData.companies = [];
+                    saveData();
+                    showModal('Todas as empresas foram removidas.');
+                });
+            });
+
+            mediaUpload.addEventListener('change', (e) => {
+                let selectedCompanyId;
+                if (currentUserId === 'fagner.santtanna@gmail.com') {
+                    selectedCompanyId = companySelect.value;
+                } else {
+                    selectedCompanyId = currentCompanyId;
+                }
+                
+                if (!selectedCompanyId) {
+                    showModal('Por favor, selecione uma empresa para fazer o upload.');
+                    return;
+                }
+                
+                const company = companiesData.companies.find(c => c.id === selectedCompanyId);
+                if (company && !company.approved) {
+                    showModal('Esta empresa ainda não foi aprovada. Não é possível enviar mídias.');
+                    return;
+                }
+
+                const files = e.target.files;
+                if (files.length > 0) {
+                    uploadLoader.classList.remove('hidden');
+                    mediaUploadText.textContent = 'Carregando...';
+                    let filesProcessed = 0;
+                    Array.from(files).forEach(file => {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            company.media.push({
+                                name: file.name,
+                                type: file.type,
+                                data: event.target.result,
+                                companyId: selectedCompanyId,
+                                companyName: company.name
+                            });
+                            filesProcessed++;
+                            if (filesProcessed === files.length) {
+                                saveData();
+                                uploadLoader.classList.add('hidden');
+                                mediaUploadText.textContent = 'Clique para selecionar ou arraste e solte arquivos de mídia (imagens e vídeos)';
+                                showModal(`Upload de ${files.length} arquivos concluído com sucesso!`);
+                                // Ensure the gallery is updated after upload
+                                filterAndRenderMedia(currentCompanyId);
+                            }
+                        };
+                        reader.readAsDataURL(file);
+                    });
+                }
+            });
+            
+            playBtn.addEventListener('click', () => {
+                if (filteredMediaList.length > 0 && !isPlaying) {
+                    startMedia();
+                    if (tvWindow && !tvWindow.closed) {
+                         tvWindow.postMessage({
+                            type: 'play',
+                            mediaList: filteredMediaList,
+                            index: 0
+                        }, window.location.origin);
+                    }
+                } else if (isPlaying) {
+                    showModal('A prévia já está em reprodução.');
+                } else {
+                    showModal('Não há mídias para reproduzir. Faça o upload.');
+                }
+            });
+
+            stopBtn.addEventListener('click', () => {
+                stopMedia();
+                if (tvWindow && !tvWindow.closed) {
+                    tvWindow.postMessage({ type: 'stop' }, window.location.origin);
+                }
+            });
+            
+            showAllMediaBtn.addEventListener('click', () => {
+                if (currentUserId === 'fagner.santtanna@gmail.com') {
+                    filterAndRenderMedia(null);
+                }
+            });
+            
+            companyList.addEventListener('click', (e) => {
+                const btn = e.target.closest('[data-action]');
+                if (btn) {
+                    const companyId = btn.getAttribute('data-company-id');
+                    if (btn.getAttribute('data-action') === 'toggle-approval') {
+                        const company = companiesData.companies.find(c => c.id === companyId);
+                        if (company) {
+                            company.approved = !company.approved;
+                            saveData();
+                            showModal(`Status de aprovação da empresa "${company.name}" alterado para ${company.approved ? 'Aprovada' : 'Pendente'}.`);
+                        }
+                    } else if (btn.getAttribute('data-action') === 'delete-company') {
+                        const company = companiesData.companies.find(c => c.id === companyId);
+                        if (company) {
+                            showConfirmModal(`Tem certeza de que deseja remover a empresa "${company.name}"? Esta ação é irreversível.`, () => {
+                                deleteCompany(companyId);
+                            });
+                        }
+                    }
+                }
+                const nameDiv = e.target.closest('.company-name');
+                if (nameDiv) {
+                    const companyId = nameDiv.getAttribute('data-company-id');
+                    filterAndRenderMedia(companyId);
+                    showAllMediaBtn.classList.remove('hidden');
+                }
+            });
+            
+            mediaGallery.addEventListener('click', (e) => {
+                 const deleteBtn = e.target.closest('.delete-media-btn');
+                 if (deleteBtn) {
+                    e.stopPropagation();
+                    const companyId = deleteBtn.getAttribute('data-company-id');
+                    const mediaName = deleteBtn.getAttribute('data-media-name');
+                    showConfirmModal(`Tem certeza de que deseja remover esta mídia? Esta ação é irreversível.`, () => {
+                        deleteMedia(companyId, mediaName);
+                    });
+                 }
+            });
+
+            leftArrowBtn.addEventListener('click', () => {
+                mediaGallery.scrollBy({ left: -200, behavior: 'smooth' });
+            });
+            
+            rightArrowBtn.addEventListener('click', () => {
+                mediaGallery.scrollBy({ left: 200, behavior: 'smooth' });
+            });
+
+            mediaGallery.addEventListener('scroll', () => {
+                updateArrowVisibility();
+            });
+
+            window.addEventListener('resize', () => {
+                updateArrowVisibility();
+            });
+            
+            companySelect.addEventListener('change', () => {
+                filterAndRenderMedia(companySelect.value);
+            });
+        }
+        
+        function showAdminPanel() {
+            loginScreen.classList.add('opacity-0');
+            setTimeout(() => {
+                loginScreen.classList.add('hidden');
+                adminPanel.classList.remove('hidden');
+                setTimeout(() => adminPanel.classList.remove('opacity-0'), 50);
+
+                if (currentUserId === 'fagner.santtanna@gmail.com') {
+                    companyManagementSection.classList.remove('hidden');
+                    companyNameDisplay.textContent = 'Modo Admin';
+                    adminPanelTitle.textContent = 'Painel de Administração';
+                    signupBtn.classList.add('hidden');
+                    mediaUploadLabel.classList.remove('hidden');
+                    mediaUploadText.textContent = 'Clique para selecionar ou arraste e solte arquivos de mídia (imagens e vídeos)';
+                    mediaUpload.disabled = false;
+                    companySelect.disabled = false;
+                    companySelectContainer.classList.remove('hidden'); // Exibe para o admin
+                    renderCompanySelectOptions();
+                    filterAndRenderMedia(null);
+                } else {
+                    companyManagementSection.classList.add('hidden');
+                    const company = companiesData.companies.find(c => c.email === currentUserId);
+                    if (company) {
+                        companyNameDisplay.textContent = company.name;
+                        adminPanelTitle.textContent = company.name;
+                        // Oculta o container do select
+                        companySelectContainer.classList.add('hidden'); 
+                        
+                        signupBtn.classList.add('hidden');
+
+                        if (company.approved) {
+                             mediaUploadLabel.classList.remove('hidden');
+                             mediaUploadText.textContent = 'Clique para selecionar ou arraste e solte arquivos de mídia (imagens e vídeos)';
+                             mediaUpload.disabled = false;
+                        } else {
+                             mediaUploadLabel.classList.add('hidden');
+                             mediaUploadText.textContent = 'Aguardando aprovação do administrador para fazer uploads.';
+                             mediaUpload.disabled = true;
+                        }
+                    }
+                    filterAndRenderMedia(currentCompanyId);
+                }
+            }, 500);
+        }
+
+        // Nova função para renderizar as opções do select de empresas
+        function renderCompanySelectOptions(companyId = null) {
+            companySelect.innerHTML = '';
+            if (companyId) {
+                const company = companiesData.companies.find(c => c.id === companyId);
+                if (company) {
+                    const option = document.createElement('option');
+                    option.value = company.id;
+                    option.textContent = company.name;
+                    companySelect.appendChild(option);
+                }
+            } else {
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = 'Selecione...';
+                companySelect.appendChild(defaultOption);
+                companiesData.companies.forEach(company => {
+                    const option = document.createElement('option');
+                    option.value = company.id;
+                    option.textContent = company.name;
+                    companySelect.appendChild(option);
+                });
+            }
+        }
+
+        function updateArrowVisibility() {
+            if (mediaGallery.scrollWidth > mediaGallery.clientWidth) {
+                leftArrowBtn.classList.remove('hidden');
+                rightArrowBtn.classList.remove('hidden');
+            } else {
+                leftArrowBtn.classList.add('hidden');
+                rightArrowBtn.classList.add('hidden');
+            }
+        }
+
+        function startMedia() {
+            isPlaying = true;
+            tvStatus.textContent = 'Reproduzindo...';
+            currentMediaIndex = 0;
+            showNextMedia();
+            showModal('A prévia da TV foi iniciada.');
+        }
+
+        function stopMedia() {
+            clearTimeout(playTimeout);
+            isPlaying = false;
+            tvVideo.pause();
+            tvVideo.currentTime = 0;
+            tvImage.classList.add('hidden');
+            tvVideo.classList.add('hidden');
+            tvStatus.classList.remove('hidden');
+            tvStatus.textContent = 'Prévia da TV parada.';
+            showModal('A prévia da TV foi parada.');
+        }
+        
+        function loadData() {
+            const storedData = localStorage.getItem(`data_ig_${appId}`);
+            if (storedData) {
+                companiesData = JSON.parse(storedData);
+            }
+            renderCompanies();
+        }
+
+        function saveData() {
+            localStorage.setItem(`data_ig_${appId}`, JSON.stringify(companiesData));
+            renderCompanies();
+        }
+
+        // Nova função para remover a empresa
+        function deleteCompany(companyId) {
+            companiesData.companies = companiesData.companies.filter(c => c.id !== companyId);
+            saveData();
+            filterAndRenderMedia(null);
+            showModal('Empresa removida com sucesso!');
+        }
+
+        function renderCompanies() {
+            companyList.innerHTML = '';
+            if (companiesData.companies.length === 0) {
+                noCompaniesMessage.classList.remove('hidden');
+                signupBtn.classList.remove('hidden');
+            } else {
+                noCompaniesMessage.classList.add('hidden');
+                signupBtn.classList.add('hidden');
+                companiesData.companies.forEach(company => {
+                    const companyItem = document.createElement('div');
+                    companyItem.className = 'flex items-center gap-2 p-2 bg-gray-600 rounded-lg shadow-md';
+                    
+                    const nameDiv = document.createElement('div');
+                    nameDiv.textContent = company.name;
+                    nameDiv.className = 'company-name cursor-pointer text-white text-sm font-medium hover:underline';
+                    nameDiv.setAttribute('data-company-id', company.id);
+                    
+                    const statusSpan = document.createElement('span');
+                    statusSpan.textContent = company.approved ? 'Aprovada' : 'Pendente';
+                    statusSpan.className = `text-xs font-semibold px-2 py-1 rounded-full ${company.approved ? 'bg-green-500' : 'bg-red-500'} text-white`;
+
+                    const approveBtn = document.createElement('button');
+                    approveBtn.setAttribute('data-company-id', company.id);
+                    approveBtn.setAttribute('data-action', 'toggle-approval');
+                    approveBtn.textContent = company.approved ? 'Desaprovar' : 'Aprovar';
+                    approveBtn.className = `ml-auto px-3 py-1 text-sm rounded-md ${company.approved ? 'bg-red-600 hover:bg-red-700' : 'bg-turquesa hover:bg-opacity-90'} text-white font-bold transition-colors`;
+                    
+                    // Botão de remover
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.setAttribute('data-company-id', company.id);
+                    deleteBtn.setAttribute('data-action', 'delete-company');
+                    deleteBtn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    `;
+                    deleteBtn.className = `ml-2 p-1 text-sm rounded-md bg-red-600 hover:bg-red-700 text-white font-bold transition-colors`;
+                    
+                    companyItem.appendChild(nameDiv);
+                    companyItem.appendChild(statusSpan);
+                    companyItem.appendChild(approveBtn);
+                    companyItem.appendChild(deleteBtn);
+                    companyList.appendChild(companyItem);
+                });
+            }
+        }
+        
+        function filterAndRenderMedia(companyId) {
+            let mediaToDisplay = [];
+            
+            if (currentUserId === 'fagner.santtanna@gmail.com') {
+                if (companyId) {
+                    const company = companiesData.companies.find(c => c.id === companyId);
+                    mediaToDisplay = company ? company.media : [];
+                    companyNameDisplay.textContent = company ? company.name : ''; 
+                    showAllMediaBtn.classList.remove('hidden');
+                } else {
+                    mediaToDisplay = companiesData.companies.flatMap(c => c.media);
+                    showAllMediaBtn.classList.add('hidden');
+                    companyNameDisplay.textContent = 'Todas as Empresas'; 
+                }
+            } else {
+                const company = companiesData.companies.find(c => c.email === currentUserId);
+                mediaToDisplay = company && company.approved ? company.media : [];
+                companyNameDisplay.textContent = company ? company.name : '';
+                showAllMediaBtn.classList.add('hidden');
+            }
+            
+            filteredMediaList = mediaToDisplay;
+            renderFilteredMedia();
+        }
+
+        function renderFilteredMedia() {
+            mediaGallery.innerHTML = '';
+            if (filteredMediaList.length === 0) {
+                noMediaMessage.classList.remove('hidden');
+                tvStatus.textContent = 'Nenhuma mídia para exibir. Faça o upload.';
+                stopMedia();
+                mediaGallery.classList.remove('overflow-x-scroll');
+                leftArrowBtn.classList.add('hidden');
+                rightArrowBtn.classList.add('hidden');
+            } else {
+                noMediaMessage.classList.add('hidden');
+                filteredMediaList.forEach((media, index) => {
+                    const mediaElement = document.createElement('div');
+                    mediaElement.className = 'flex-shrink-0 relative group w-48 h-full rounded-lg overflow-hidden cursor-pointer shadow-lg transition-transform hover:scale-105';
+                    if (media.type.startsWith('image')) {
+                        mediaElement.innerHTML = `<img src="${media.data}" alt="Mídia ${index + 1}" class="w-full h-full object-cover">`;
+                    } else if (media.type.startsWith('video')) {
+                        mediaElement.innerHTML = `
+                            <video src="${media.data}" class="w-full h-full object-cover"></video>
+                            <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <span class="text-white text-3xl">&#x25B6;</span>
+                            </div>
+                        `;
+                    }
+                    
+                    if (currentUserId === 'fagner.santtanna@gmail.com' && media.companyName) {
+                        const companyTag = document.createElement('span');
+                        companyTag.className = 'absolute top-2 left-2 bg-gray-900 text-white text-xs px-2 py-1 rounded-full opacity-90';
+                        companyTag.textContent = media.companyName;
+                        mediaElement.appendChild(companyTag);
+                    }
+
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    `;
+                    deleteBtn.className = 'delete-media-btn absolute top-2 right-2 p-2 bg-red-600 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity';
+                    deleteBtn.setAttribute('data-company-id', media.companyId);
+                    deleteBtn.setAttribute('data-media-name', media.name);
+                    mediaElement.appendChild(deleteBtn);
+
+                    mediaGallery.appendChild(mediaElement);
+                });
+                
+                if (filteredMediaList.length > 3) {
+                    mediaGallery.classList.add('overflow-x-scroll');
+                    leftArrowBtn.classList.remove('hidden');
+                    rightArrowBtn.classList.remove('hidden');
+                } else {
+                    mediaGallery.classList.remove('overflow-x-scroll');
+                    leftArrowBtn.classList.add('hidden');
+                    rightArrowBtn.classList.add('hidden');
+                }
+            }
+        }
+
+        function deleteMedia(companyId, mediaName) {
+            const company = companiesData.companies.find(c => c.id === companyId);
+            if (company) {
+                company.media = company.media.filter(m => m.name !== mediaName);
+                saveData();
+                filterAndRenderMedia(currentCompanyId);
+                showModal('Mídia removida com sucesso!');
+            }
+        }
+        
+        function showNextMedia() {
+            if (filteredMediaList.length === 0) {
+                stopMedia();
+                tvStatus.textContent = 'Nenhuma mídia para exibir. Faça o upload.';
+                tvImage.classList.add('hidden');
+                tvVideo.classList.add('hidden');
+                return;
+            }
+
+            if (currentMediaIndex >= filteredMediaList.length) {
+                currentMediaIndex = 0;
+            }
+            
+            const media = filteredMediaList[currentMediaIndex];
+            tvStatus.classList.add('hidden');
+            tvImage.classList.add('hidden');
+            tvVideo.classList.add('hidden');
+
+            if (media.type.startsWith('image')) {
+                tvImage.src = media.data;
+                tvImage.classList.remove('hidden');
+                playTimeout = setTimeout(() => {
+                    currentMediaIndex++;
+                    showNextMedia();
+                }, 5000);
+            } else if (media.type.startsWith('video')) {
+                tvVideo.src = media.data;
+                tvVideo.classList.remove('hidden');
+                tvVideo.play();
+            }
+        }
+        
+        tvVideo.addEventListener('ended', () => {
+            currentMediaIndex++;
+            showNextMedia();
+        });
+
+        // Lógica da tela da TV
+        function initTvScreen() {
+            loginScreen.remove();
+            adminPanel.remove();
+            tvScreen.classList.remove('hidden');
+            
+            window.addEventListener('message', (event) => {
+                if (event.origin !== window.location.origin) {
+                    return;
+                }
+
+                const data = event.data;
+                if (data.type === 'play') {
+                    filteredMediaList = data.mediaList;
+                    currentMediaIndex = data.index;
+                    playTvContent();
+                } else if (data.type === 'stop') {
+                    stopTvContent();
+                }
+            });
+        }
+        
+        let tvPlayTimeout;
+
+        function playTvContent() {
+            clearTimeout(tvPlayTimeout);
+            if (filteredMediaList.length === 0) {
+                stopTvContent();
+                return;
+            }
+            
+            if (currentMediaIndex >= filteredMediaList.length) {
+                currentMediaIndex = 0;
+            }
+
+            const media = filteredMediaList[currentMediaIndex];
+            tvScreenStatus.classList.add('hidden');
+            tvScreenImage.classList.add('hidden');
+            tvScreenVideo.classList.add('hidden');
+
+            if (media.type.startsWith('image')) {
+                tvScreenImage.src = media.data;
+                tvScreenImage.classList.remove('hidden');
+                tvPlayTimeout = setTimeout(() => {
+                    currentMediaIndex++;
+                    playTvContent();
+                }, 5000);
+            } else if (media.type.startsWith('video')) {
+                tvScreenVideo.src = media.data;
+                tvScreenVideo.classList.remove('hidden');
+                tvScreenVideo.play();
+            }
+        }
+
+        tvScreenVideo.addEventListener('ended', () => {
+            currentMediaIndex++;
+            playTvContent();
+        });
+
+        function stopTvContent() {
+            clearTimeout(tvPlayTimeout);
+            tvScreenVideo.pause();
+            tvScreenVideo.currentTime = 0;
+            tvScreenImage.classList.add('hidden');
+            tvScreenVideo.classList.add('hidden');
+            tvScreenStatus.classList.remove('hidden');
+            tvScreenStatus.textContent = 'Aguardando conteúdo...';
+        }
+
+        // Inicialização
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const mode = urlParams.get('mode');
+            if (mode === 'tv') {
+                initTvScreen();
+            } else {
+                initAdminPanel();
+                const session = loadSession();
+                if (session) {
+                    currentUserId = session.userId;
+                    currentCompanyId = session.companyId;
+                    showAdminPanel();
+                } else {
+                    loginScreen.classList.remove('hidden');
+                }
+            }
+        };
+
+    </script>
+
+</body>
+</html>
